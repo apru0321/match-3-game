@@ -1,0 +1,14 @@
+{
+  "name": "match-3-game",
+  "version": "1.0.0",
+  "description": "A browser-based Match-3 puzzle game",
+  "main": "src/js/main.js",
+  "scripts": {
+    "start": "http-server src/ -p 8080"
+  },
+  "author": "apru",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
