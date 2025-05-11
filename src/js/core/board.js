@@ -34,9 +34,7 @@ export function initBoard(board, GRID_HEIGHT, GRID_WIDTH, selectedShapes, TILE_S
         }
         validateBoard(board, GRID_HEIGHT, GRID_WIDTH);
         console.log('Str 36 board...');
-        console.log(`selectedShapes === ${selectedShapes}`);
-        console.log(`validateBoard === ${validateBoard}`);
-        resolveInitialMatches(board, selectedShapes, validateBoard);
+        resolveInitialMatches(board, selectedShapes, validateBoard, GRID_HEIGHT, GRID_WIDTH);
         console.log('Board initialized successfully');
     } catch (e) {
         console.error(`Failed to initialize board: ${e.message}`);
@@ -44,7 +42,7 @@ export function initBoard(board, GRID_HEIGHT, GRID_WIDTH, selectedShapes, TILE_S
     }
 }
 
-export function resolveInitialMatches(board, selectedShapes, validateBoard) {
+export function resolveInitialMatches(board, selectedShapes, validateBoard, GRID_HEIGHT, GRID_WIDTH) {
     console.log('Resolving initial matches...');
     try {
         let iteration = 0;
@@ -61,7 +59,7 @@ export function resolveInitialMatches(board, selectedShapes, validateBoard) {
                     board[pos.row][pos.col].bonusType = null;
                 });
             });
-            validateBoard(board);
+            validateBoard(board, GRID_HEIGHT, GRID_WIDTH);
             iteration++;
         }
     } catch (e) {
