@@ -424,7 +424,7 @@ export async function swapTiles(board, r1, c1, r2, c2, animations, render, valid
         animations.push({ row: r1, col: c1 }, { row: r2, col: c2 });
         render();
         await new Promise(resolve => setTimeout(resolve, 200));
-        validateBoard(board);
+        validateBoard(board, GRID_HEIGHT, GRID_WIDTH);
     } catch (e) {
         console.error(`Error in swapTiles: ${e.message}`);
     }
