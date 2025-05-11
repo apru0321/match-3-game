@@ -36,7 +36,7 @@ function adjustCanvasSize() {
 function updateBoardPositions() {
     try {
         validateBoard(board, GRID_HEIGHT, GRID_WIDTH);
-        for (let row = 0; row GRID_HEIGHT; row++) {
+        for (let row = 0; row < GRID_HEIGHT; row++) {
             for (let col = 0; col < GRID_WIDTH; col++) {
                 if (board[row][col]) {
                     board[row][col].x = col * TILE_SIZE;
