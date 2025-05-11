@@ -1,8 +1,8 @@
 import { GRID_WIDTH, GRID_HEIGHT, ALL_SHAPES } from '../constants.js';
 
 export function validateBoard(board, GRID_HEIGHT, GRID_WIDTH) {
-    console.log('board === ${board}');
-    console.log('GRID_HEIGHT === ${GRID_HEIGHT}');
+    console.log(`board === ${board}`);
+    console.log(`GRID_HEIGHT === ${GRID_HEIGHT}`);
     if (!Array.isArray(board) || board.length !== GRID_HEIGHT) {
         throw new Error(`Invalid board: expected ${GRID_HEIGHT} rows, got ${board.length}`);
     }
