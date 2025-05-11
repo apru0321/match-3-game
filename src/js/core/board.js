@@ -34,7 +34,7 @@ export function initBoard(board, GRID_HEIGHT, GRID_WIDTH, selectedShapes, TILE_S
         }
         validateBoard(board, GRID_HEIGHT, GRID_WIDTH);
         console.log('Str 36 board...');
-        resolveInitialMatches(board, selectedShapes, validateBoard, GRID_HEIGHT, GRID_WIDTH);
+        resolveInitialMatches(board, selectedShapes, validateBoard);
         console.log('Board initialized successfully');
     } catch (e) {
         console.error(`Failed to initialize board: ${e.message}`);
@@ -42,7 +42,7 @@ export function initBoard(board, GRID_HEIGHT, GRID_WIDTH, selectedShapes, TILE_S
     }
 }
 
-export function resolveInitialMatches(board, selectedShapes, validateBoard, GRID_HEIGHT, GRID_WIDTH) {
+export function resolveInitialMatches(board, selectedShapes, validateBoard) {
     console.log('Resolving initial matches...');
     try {
         let iteration = 0;
