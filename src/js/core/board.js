@@ -1,4 +1,4 @@
-import { GRID_WIDTH, GRID_HEIGHT, ALL_SHAPES } from '../constants.js';
+import { GRID_WIDTH, GRID_HEIGHT, ALL_SHAPES } from '../../constants.js';
 
 export function validateBoard(board, GRID_HEIGHT, GRID_WIDTH) {
     if (!Array.isArray(board) || board.length !== GRID_HEIGHT) {
