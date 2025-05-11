@@ -1,4 +1,4 @@
-import { GRID_WIDTH, GRID_HEIGHT, ALL_SHAPES, ALL_COLORS, PREDEFINED_TASKS } from '../constants.js';
+import { GRID_WIDTH, GRID_HEIGHT, ALL_SHAPES, ALL_COLORS, PREDEFINED_TASKS } from '../../constants.js';
 import { validateBoard, initBoard, resolveInitialMatches, checkMatches, handleMatches, dropTiles, fillBoard, handleBonusTileAction, handleBonusStarSwap, swapTiles } from './board.js';
 import { handleClick, handleDoubleClick, handleTouchStart, handleTouchMove, handleTouchEnd, isAdjacent } from './input.js';
 import { render, updateAnimations, createShapeCanvas } from './render.js';
