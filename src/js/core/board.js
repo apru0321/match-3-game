@@ -1,7 +1,7 @@
 import { GRID_WIDTH, GRID_HEIGHT, ALL_SHAPES } from '../constants.js';
 
 export function validateBoard(board, GRID_HEIGHT, GRID_WIDTH) {
-    console.log(`board === ${board}`);
+    console.log(`GRID_WIDTH === ${GRID_WIDTH}`);
     console.log(`GRID_HEIGHT === ${GRID_HEIGHT}`);
     if (!Array.isArray(board) || board.length !== GRID_HEIGHT) {
         throw new Error(`Invalid board: expected ${GRID_HEIGHT} rows, got ${board.length}`);
@@ -33,6 +33,9 @@ export function initBoard(board, GRID_HEIGHT, GRID_WIDTH, selectedShapes, TILE_S
             }
         }
         validateBoard(board, GRID_HEIGHT, GRID_WIDTH);
+        console.log('Str 36 board...');
+        console.log(`selectedShapes === ${selectedShapes}`);
+        console.log(`validateBoard === ${validateBoard}`);
         resolveInitialMatches(board, selectedShapes, validateBoard);
         console.log('Board initialized successfully');
     } catch (e) {
