@@ -5,7 +5,7 @@ export function initBoard(board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, tileSize, 
     console.log(`GRID_WIDTH === ${GRID_WIDTH}`);
     console.log(`GRID_HEIGHT === ${GRID_HEIGHT}`);
     try {
-        validateBoard(board, GRID_HEIGHT, GRID_WIDTH);
+        // Очищаем массив board и создаём новую структуру
         board.length = 0;
         for (let row = 0; row < GRID_HEIGHT; row++) {
             const rowArray = [];
@@ -25,22 +25,24 @@ export function initBoard(board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, tileSize, 
             board.push(rowArray);
         }
         console.log(`Str ${GRID_WIDTH * GRID_HEIGHT} board...`);
+        validateBoard(board, GRID_HEIGHT, GRID_WIDTH); // Валидация после заполнения
         resolveInitialMatches(board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, [], validateBoard);
         console.log('Board initialized successfully');
         console.log(`GRID_WIDTH === ${GRID_WIDTH}`);
         console.log(`GRID_HEIGHT === ${GRID_HEIGHT}`);
     } catch (e) {
         console.error(`Failed to initialize board: ${e.message}`);
+        throw e; // Перебрасываем ошибку для обработки в game.js
     }
 }
 
 export function validateBoard(board, GRID_HEIGHT, GRID_WIDTH) {
     try {
         if (!board) throw new Error('Board is undefined');
-        if (board.length !== GRID_HEIGHT) throw new Error(`Board height must be ${GRID_HEIGHT}`);
+        if (board.length !== GRID_HEIGHT) throw new Error(`Board height must be ${GRID_HEIGHT}, got ${board.length}`);
         for (let row = 0; row < GRID_HEIGHT; row++) {
             if (!board[row] || board[row].length !== GRID_WIDTH) {
-                throw new Error(`Board row ${row} must have width ${GRID_WIDTH}`);
+                throw new Error(`Board row ${row} must have width ${GRID_WIDTH}, got ${board[row]?.length || 0}`);
             }
         }
     } catch (e) {
@@ -60,7 +62,25 @@ export function resolveInitialMatches(board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES
             matches.forEach(match => {
                 console.log(`${match.type} match at ${match.position}: ${match.length} ${ALL_SHAPES[board[match.row][match.col].type]} tiles`);
             });
-            handleMatches(board, ALL_SHAPES, {}, {}, {}, {}, () => {}, () => {}, () => {}, dropTiles, fillBoard, validateBoard, () => {});
+            handleMatches(
+                board,
+                ALL_SHAPES,
+                {}, // task
+                {}, // collectedShapes
+                {}, // score
+                {}, // taskScore
+                () => {}, // updateScoreDisplay
+                () => {}, // updateTaskDisplay
+                () => {}, // renderCallback
+                dropTiles,
+                fillBoard,
+                validateBoard,
+                () => {}, // checkTaskCompletion
+                null, // ctx
+                animations,
+                {}, // shapeCanvases
+                50 // tileSize
+            );
             iteration++;
             console.log(`GRID_WIDTH === ${GRID_WIDTH}`);
             console.log(`GRID_HEIGHT === ${GRID_HEIGHT}`);
@@ -195,7 +215,7 @@ export function handleMatches(board, ALL_SHAPES, task, collectedShapes, score, t
             dropTiles(board, animations, renderCallback, validateBoard, ctx, shapeCanvases, tileSize);
             fillBoard(board, ALL_SHAPES, animations, renderCallback, validateBoard, ctx, shapeCanvases, tileSize);
             updateScoreDisplay();
-            updateTaskDisplay(task, collectedShapes, movesLeft);
+            updateTaskDisplay(task, collectedShapes, task.moves);
             checkTaskCompletion();
         }
     } catch (e) {
@@ -218,7 +238,9 @@ export function dropTiles(board, animations, renderCallback, validateBoard, ctx,
                 board[row][col] = null;
             }
         }
-        renderCallback(ctx, board, null, animations, shapeCanvases, tileSize);
+        if (renderCallback) {
+            renderCallback(ctx, board, null, animations, shapeCanvases, tileSize);
+        }
     } catch (e) {
         console.error(`Failed to drop tiles: ${e.message}`);
     }
@@ -242,7 +264,9 @@ export function fillBoard(board, ALL_SHAPES, animations, renderCallback, validat
                 }
             }
         }
-        renderCallback(ctx, board, null, animations, shapeCanvases, tileSize);
+        if (renderCallback) {
+            renderCallback(ctx, board, null, animations, shapeCanvases, tileSize);
+        }
     } catch (e) {
         console.error(`Failed to fill board: ${e.message}`);
     }
@@ -259,7 +283,9 @@ export function swapTiles(board, row1, col1, row2, col2, animations, renderCallb
         board[row2][col2].targetX = col2 * tileSize;
         board[row2][col2].targetY = row2 * tileSize;
 
-        renderCallback(ctx, board, null, animations, shapeCanvases, tileSize);
+        if (renderCallback) {
+            renderCallback(ctx, board, null, animations, shapeCanvases, tileSize);
+        }
     } catch (e) {
         console.error(`Failed to swap tiles: ${e.message}`);
     }
@@ -273,7 +299,7 @@ export function handleBonusTileAction(board, row, col, bonusType, GRID_HEIGHT, G
         dropTiles(board, animations, renderCallback, validateBoard, ctx, shapeCanvases, tileSize);
         fillBoard(board, ALL_SHAPES, animations, renderCallback, validateBoard, ctx, shapeCanvases, tileSize);
         updateScoreDisplay();
-        updateTaskDisplay(task, collectedShapes, movesLeft);
+        updateTaskDisplay(task, collectedShapes, task.moves);
         checkTaskCompletion();
     } catch (e) {
         console.error(`Failed to handle bonus tile action: ${e.message}`);
@@ -290,7 +316,7 @@ export function handleBonusStarSwap(board, row1, col1, row2, col2, GRID_HEIGHT, 
         dropTiles(board, animations, renderCallback, validateBoard, ctx, shapeCanvases, tileSize);
         fillBoard(board, ALL_SHAPES, animations, renderCallback, validateBoard, ctx, shapeCanvases, tileSize);
         updateScoreDisplay();
-        updateTaskDisplay(task, collectedShapes, movesLeft);
+        updateTaskDisplay(task, collectedShapes, task.moves);
         checkTaskCompletion();
     } catch (e) {
         console.error(`Failed to handle bonus star swap: ${e.message}`);
