@@ -1,158 +1,134 @@
-import { GRID_HEIGHT, GRID_WIDTH } from '../constants.js';
+import { GRID_WIDTH, GRID_HEIGHT } from '../constants.js';
 
-export function isAdjacent(r1, c1, r2, c2) {
-    return (Math.abs(r1 - r2) === 1 && c1 === c2) || (Math.abs(c1 - c2) === 1 && r1 === r2);
-}
-
-export function handleClick(event, board, selectedTile, isProcessing, movesLeft, handleBonusStarSwap, swapTiles, handleMatches, checkTaskCompletion, updateTaskDisplay, render) {
+export function handleClick(e, board, selectedTile, isProcessing, movesLeft, handleBonusStarSwap, swapTiles, handleMatches, checkTaskCompletion, updateTaskDisplay, render, score, taskScore, updateScoreDisplay, canvas, tileSize) {
     if (isProcessing) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const col = Math.floor(x / TILE_SIZE);
-    const row = Math.floor(y / TILE_SIZE);
-    if (row < 0 || row >= GRID_HEIGHT || col < 0 || col >= GRID_WIDTH || !board[row]?.[col]) return;
+    try {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const col = Math.floor(x / tileSize);
+        const row = Math.floor(y / tileSize);
 
-    if (!selectedTile) {
-        selectedTile = { row, col };
-        render();
-    } else {
-        const sr = selectedTile.row;
-        const sc = selectedTile.col;
-        if (isAdjacent(sr, sc, row, col)) {
-            isProcessing = true;
-            movesLeft--;
-            updateTaskDisplay();
-            const tile1 = board[sr][sc];
-            const tile2 = board[row][col];
-            if (tile1.bonusType === 'bonus_star' || tile2.bonusType === 'bonus_star') {
-                handleBonusStarSwap(sr, sc, row, col).then(() => {
-                    checkTaskCompletion();
-                    isProcessing = false;
-                    render();
-                });
-            } else {
-                swapTiles(sr, sc, row, col).then(() => {
-                    const matches = checkMatches();
-                    if (matches) {
-                        handleMatches().then(checkTaskCompletion);
-                    } else {
-                        swapTiles(sr, sc, row, col).then(() => {
-                            isProcessing = false;
-                            movesLeft++;
-                            updateTaskDisplay();
-                            render();
-                        });
-                    }
-                    selectedTile = null;
-                });
-            }
-        } else {
+        if (row < 0 || row >= GRID_HEIGHT || col < 0 || col >= GRID_WIDTH) return;
+
+        if (!selectedTile) {
             selectedTile = { row, col };
             render();
+        } else {
+            if (isAdjacent(selectedTile, { row, col })) {
+                isProcessing = true;
+                movesLeft--;
+
+                const isBonusStarSwap = board[selectedTile.row][selectedTile.col].bonusType === 'bonus_star' || board[row][col].bonusType === 'bonus_star';
+                if (isBonusStarSwap) {
+                    handleBonusStarSwap(board, selectedTile.row, selectedTile.col, row, col, GRID_HEIGHT, GRID_WIDTH, ['square', 'circle', 'triangle'], task, collectedShapes, score, taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkMatches, handleMatches, checkTaskCompletion);
+                } else {
+                    swapTiles(board, selectedTile.row, selectedTile.col, row, col, [], render, validateBoard, tileSize);
+                    handleMatches(board, ['square', 'circle', 'triangle'], task, collectedShapes, score, taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkTaskCompletion);
+                }
+
+                checkTaskCompletion();
+                updateTaskDisplay(task, collectedShapes, movesLeft);
+                selectedTile = null;
+                isProcessing = false;
+                render();
+            } else {
+                selectedTile = { row, col };
+                render();
+            }
         }
+    } catch (e) {
+        console.error(`Error in handleClick: ${e.message}`);
     }
 }
 
-export function handleDoubleClick(event, board, isProcessing, handleBonusTileAction, checkTaskCompletion, render) {
+export function handleDoubleClick(e, board, isProcessing, handleBonusTileAction, checkTaskCompletion, render, canvas, tileSize) {
     if (isProcessing) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const col = Math.floor(x / TILE_SIZE);
-    const row = Math.floor(y / TILE_SIZE);
-    if (row < 0 || row >= GRID_HEIGHT || col < 0 || col >= GRID_WIDTH || !board[row]?.[col]) return;
+    try {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const col = Math.floor(x / tileSize);
+        const row = Math.floor(y / tileSize);
 
-    const tile = board[row][col];
-    if (tile.bonusType === 'horizontal_arrow' || tile.bonusType === 'vertical_arrow') {
-        isProcessing = true;
-        handleBonusTileAction(row, col, tile.bonusType).then(() => {
+        if (row < 0 || row >= GRID_HEIGHT || col < 0 || col >= GRID_WIDTH) return;
+
+        const tile = board[row][col];
+        if (tile && tile.bonusType && tile.bonusType !== 'bonus_star') {
+            isProcessing = true;
+            handleBonusTileAction(board, row, col, tile.bonusType, GRID_HEIGHT, GRID_WIDTH, ['square', 'circle', 'triangle'], task, collectedShapes, score, taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkMatches, handleMatches, checkTaskCompletion);
             checkTaskCompletion();
             isProcessing = false;
             render();
-        });
+        }
+    } catch (e) {
+        console.error(`Error in handleDoubleClick: ${e.message}`);
     }
 }
 
-let touchStartTile = null;
-let touchMoved = false;
-
-export function handleTouchStart(event, board, selectedTile, isProcessing, TILE_SIZE, render) {
+export function handleTouchStart(e, board, selectedTile, isProcessing, tileSize, render, canvas) {
     if (isProcessing) return;
-    event.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const x = event.touches[0].clientX - rect.left;
-    const y = event.touches[0].clientY - rect.top;
-    const col = Math.floor(x / TILE_SIZE);
-    const row = Math.floor(y / TILE_SIZE);
-    if (row < 0 || row >= GRID_HEIGHT || col < 0 || col >= GRID_WIDTH || !board[row]?.[col]) return;
+    try {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        const col = Math.floor(x / tileSize);
+        const row = Math.floor(y / tileSize);
 
-    touchStartTile = { row, col };
-    touchMoved = false;
-    selectedTile = { row, col };
-    render();
+        if (row < 0 || row >= GRID_HEIGHT || col < 0 || col >= GRID_WIDTH) return;
+
+        selectedTile = { row, col };
+        render();
+    } catch (e) {
+        console.error(`Error in handleTouchStart: ${e.message}`);
+    }
 }
 
-export function handleTouchMove(event) {
-    if (!touchStartTile) return;
-    event.preventDefault();
-    touchMoved = true;
+export function handleTouchMove(e) {
+    e.preventDefault();
 }
 
-export function handleTouchEnd(event, board, selectedTile, isProcessing, movesLeft, handleBonusTileAction, handleBonusStarSwap, swapTiles, handleMatches, checkTaskCompletion, updateTaskDisplay, render, TILE_SIZE) {
-    if (!touchStartTile) return;
-    event.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const x = event.changedTouches[0].clientX - rect.left;
-    const y = event.changedTouches[0].clientY - rect.top;
-    const col = Math.floor(x / TILE_SIZE);
-    const row = Math.floor(y / TILE_SIZE);
+export function handleTouchEnd(e, board, selectedTile, isProcessing, movesLeft, handleBonusTileAction, handleBonusStarSwap, swapTiles, handleMatches, checkTaskCompletion, updateTaskDisplay, render, tileSize, canvas) {
+    if (isProcessing || !selectedTile) return;
+    try {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        const col = Math.floor(x / tileSize);
+        const row = Math.floor(y / tileSize);
 
-    if (!touchMoved) {
-        const tile = board[touchStartTile.row][touchStartTile.col];
-        if (tile.bonusType === 'horizontal_arrow' || tile.bonusType === 'vertical_arrow') {
-            isProcessing = true;
-            handleBonusTileAction(touchStartTile.row, touchStartTile.col, tile.bonusType).then(() => {
-                checkTaskCompletion();
-                isProcessing = false;
-                render();
-            });
-        }
-    } else if (row >= 0 && row < GRID_HEIGHT && col >= 0 && col < GRID_WIDTH && board[row]?.[col]) {
-        const sr = touchStartTile.row;
-        const sc = touchStartTile.col;
-        if (isAdjacent(sr, sc, row, col)) {
+        if (row < 0 || row >= GRID_HEIGHT || col < 0 || col >= GRID_WIDTH) return;
+
+        if (isAdjacent(selectedTile, { row, col })) {
             isProcessing = true;
             movesLeft--;
-            updateTaskDisplay();
-            const tile1 = board[sr][sc];
-            const tile2 = board[row][col];
-            if (tile1.bonusType === 'bonus_star' || tile2.bonusType === 'bonus_star') {
-                handleBonusStarSwap(sr, sc, row, col).then(() => {
-                    checkTaskCompletion();
-                    isProcessing = false;
-                    render();
-                });
-            } else {
-                swapTiles(sr, sc, row, col).then(() => {
-                    const matches = checkMatches();
-                    if (matches) {
-                        handleMatches().then(checkTaskCompletion);
-                    } else {
-                        swapTiles(sr, sc, row, col).then(() => {
-                            isProcessing = false;
-                            movesLeft++;
-                            updateTaskDisplay();
-                            render();
-                        });
-                    }
-                    selectedTile = null;
-                });
-            }
-        }
-    }
 
-    touchStartTile = null;
-    selectedTile = null;
-    render();
+            const isBonusStarSwap = board[selectedTile.row][selectedTile.col].bonusType === 'bonus_star' || board[row][col].bonusType === 'bonus_star';
+            if (isBonusStarSwap) {
+                handleBonusStarSwap(board, selectedTile.row, selectedTile.col, row, col, GRID_HEIGHT, GRID_WIDTH, ['square', 'circle', 'triangle'], task, collectedShapes, score, taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkMatches, handleMatches, checkTaskCompletion);
+            } else {
+                swapTiles(board, selectedTile.row, selectedTile.col, row, col, [], render, validateBoard, tileSize);
+                handleMatches(board, ['square', 'circle', 'triangle'], task, collectedShapes, score, taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkTaskCompletion);
+            }
+
+            checkTaskCompletion();
+            updateTaskDisplay(task, collectedShapes, movesLeft);
+            selectedTile = null;
+            isProcessing = false;
+            render();
+        }
+    } catch (e) {
+        console.error(`Error in handleTouchEnd: ${e.message}`);
+    }
+}
+
+export function isAdjacent(tile1, tile2) {
+    return (
+        (tile1.row === tile2.row && Math.abs(tile1.col - tile2.col) === 1) ||
+        (tile1.col === tile2.col && Math.abs(tile1.row - tile2.row) === 1)
+    );
 }
