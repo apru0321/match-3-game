@@ -4,7 +4,7 @@ import { swapTiles, handleBonusStarSwap, handleMatches, handleBonusTileAction, d
 import { updateTaskDisplay, checkTaskCompletion, loadTask, showNotification } from './tasks.js';
 
 export function handleClick(e, gameState) {
-    if (gameState.isProcessing) return;
+    if (gameState.isProcessing || gameState.board.length !== GRID_HEIGHT) return;
     try {
         const rect = gameState.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -22,7 +22,7 @@ export function handleClick(e, gameState) {
                 gameState.isProcessing = true;
                 gameState.movesLeft--;
 
-                const isBonusStarSwap = gameState.board[gameState.selectedTile.row][gameState.selectedTile.col].bonusType === 'bonus_star' || gameState.board[row][col].bonusType === 'bonus_star';
+                const isBonusStarSwap = gameState.board[gameState.selectedTile.row][gameState.selectedTile.col]?.bonusType === 'bonus_star' || gameState.board[row][col]?.bonusType === 'bonus_star';
                 if (isBonusStarSwap) {
                     handleBonusStarSwap(
                         gameState.board,
@@ -45,7 +45,11 @@ export function handleClick(e, gameState) {
                         validateBoard,
                         checkMatches,
                         handleMatches,
-                        checkTaskCompletion
+                        checkTaskCompletion,
+                        gameState.ctx,
+                        gameState.animations,
+                        gameState.shapeCanvases,
+                        gameState.tileSize
                     );
                 } else {
                     swapTiles(
@@ -57,7 +61,9 @@ export function handleClick(e, gameState) {
                         gameState.animations,
                         (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
                         validateBoard,
-                        gameState.tileSize
+                        gameState.tileSize,
+                        gameState.ctx,
+                        gameState.shapeCanvases
                     );
                     handleMatches(
                         gameState.board,
@@ -72,7 +78,11 @@ export function handleClick(e, gameState) {
                         dropTiles,
                         fillBoard,
                         validateBoard,
-                        checkTaskCompletion
+                        checkTaskCompletion,
+                        gameState.ctx,
+                        gameState.animations,
+                        gameState.shapeCanvases,
+                        gameState.tileSize
                     );
                 }
 
@@ -110,7 +120,7 @@ export function handleClick(e, gameState) {
 }
 
 export function handleDoubleClick(e, gameState) {
-    if (gameState.isProcessing) return;
+    if (gameState.isProcessing || gameState.board.length !== GRID_HEIGHT) return;
     try {
         const rect = gameState.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -143,7 +153,11 @@ export function handleDoubleClick(e, gameState) {
                 validateBoard,
                 checkMatches,
                 handleMatches,
-                checkTaskCompletion
+                checkTaskCompletion,
+                gameState.ctx,
+                gameState.animations,
+                gameState.shapeCanvases,
+                gameState.tileSize
             );
             checkTaskCompletion(
                 gameState.task,
@@ -173,7 +187,7 @@ export function handleDoubleClick(e, gameState) {
 }
 
 export function handleTouchStart(e, gameState) {
-    if (gameState.isProcessing) return;
+    if (gameState.isProcessing || gameState.board.length !== GRID_HEIGHT) return;
     try {
         e.preventDefault();
         const touch = e.touches[0];
@@ -197,7 +211,7 @@ export function handleTouchMove(e) {
 }
 
 export function handleTouchEnd(e, gameState) {
-    if (gameState.isProcessing || !gameState.selectedTile) return;
+    if (gameState.isProcessing || !gameState.selectedTile || gameState.board.length !== GRID_HEIGHT) return;
     try {
         e.preventDefault();
         const touch = e.changedTouches[0];
@@ -213,7 +227,7 @@ export function handleTouchEnd(e, gameState) {
             gameState.isProcessing = true;
             gameState.movesLeft--;
 
-            const isBonusStarSwap = gameState.board[gameState.selectedTile.row][gameState.selectedTile.col].bonusType === 'bonus_star' || gameState.board[row][col].bonusType === 'bonus_star';
+            const isBonusStarSwap = gameState.board[gameState.selectedTile.row][gameState.selectedTile.col]?.bonusType === 'bonus_star' || gameState.board[row][col]?.bonusType === 'bonus_star';
             if (isBonusStarSwap) {
                 handleBonusStarSwap(
                     gameState.board,
@@ -236,7 +250,11 @@ export function handleTouchEnd(e, gameState) {
                     validateBoard,
                     checkMatches,
                     handleMatches,
-                    checkTaskCompletion
+                    checkTaskCompletion,
+                    gameState.ctx,
+                    gameState.animations,
+                    gameState.shapeCanvases,
+                    gameState.tileSize
                 );
             } else {
                 swapTiles(
@@ -248,7 +266,9 @@ export function handleTouchEnd(e, gameState) {
                     gameState.animations,
                     (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
                     validateBoard,
-                    gameState.tileSize
+                    gameState.tileSize,
+                    gameState.ctx,
+                    gameState.shapeCanvases
                 );
                 handleMatches(
                     gameState.board,
@@ -263,7 +283,11 @@ export function handleTouchEnd(e, gameState) {
                     dropTiles,
                     fillBoard,
                     validateBoard,
-                    checkTaskCompletion
+                    checkTaskCompletion,
+                    gameState.ctx,
+                    gameState.animations,
+                    gameState.shapeCanvases,
+                    gameState.tileSize
                 );
             }
 
