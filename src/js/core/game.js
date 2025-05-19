@@ -4,45 +4,53 @@ import { handleClick, handleDoubleClick, handleTouchStart, handleTouchMove, hand
 import { render, updateAnimations, createShapeCanvas } from './render.js';
 import { loadTask, generateNewTask, updateTaskDisplay, checkTaskCompletion, showNotification } from './tasks.js';
 
-let isGameInitialized = false;
-let isProcessing = false;
-let selectedTile = null;
-let score = 0;
-let taskScore = 0;
-let task = { shape: 'square', count: 10, moves: 3 };
-let collectedShapes = { square: 0 };
-let movesLeft = 3;
-let currentTaskIndex = 0;
-let board = [];
-let animations = [];
-let shapeCanvases = {};
-
-const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d');
-let TILE_SIZE = 50;
+const gameState = {
+    isGameInitialized: false,
+    isProcessing: false,
+    selectedTile: null,
+    score: 0,
+    taskScore: 0,
+    task: { shape: 'square', count: 10, moves: 3 },
+    collectedShapes: { square: 0, circle: 0, triangle: 0 },
+    movesLeft: 3,
+    currentTaskIndex: 0,
+    board: [],
+    animations: [],
+    shapeCanvases: {},
+    canvas: document.getElementById('game-canvas'),
+    ctx: null,
+    tileSize: 50
+};
 
 function adjustCanvasSize() {
-    const containerWidth = document.getElementById('game-container').offsetWidth;
-    const maxCanvasWidth = Math.min(containerWidth - 20, 360);
-    TILE_SIZE = Math.floor(maxCanvasWidth / GRID_WIDTH);
-    canvas.width = GRID_WIDTH * TILE_SIZE;
-    canvas.height = GRID_HEIGHT * TILE_SIZE;
-    if (board.length === GRID_HEIGHT) {
-        updateBoardPositions();
+    try {
+        const containerWidth = document.getElementById('game-container').offsetWidth;
+        gameState.tileSize = Math.floor(Math.min(containerWidth - 20, 360) / GRID_WIDTH);
+        gameState.canvas.width = GRID_WIDTH * gameState.tileSize;
+        gameState.canvas.height = GRID_HEIGHT * gameState.tileSize;
+        if (gameState.board.length === GRID_HEIGHT) {
+            updateBoardPositions();
+        }
+        if (gameState.ctx) {
+            render(gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize);
+        } else {
+            console.error('Cannot render: ctx is undefined in adjustCanvasSize');
+        }
+    } catch (e) {
+        console.error(`Error in adjustCanvasSize: ${e.message}`);
     }
-    render(ctx, board, selectedTile, animations, shapeCanvases, TILE_SIZE);
 }
 
 function updateBoardPositions() {
     try {
-        validateBoard(board, GRID_HEIGHT, GRID_WIDTH);
+        validateBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH);
         for (let row = 0; row < GRID_HEIGHT; row++) {
             for (let col = 0; col < GRID_WIDTH; col++) {
-                if (board[row][col]) {
-                    board[row][col].x = col * TILE_SIZE;
-                    board[row][col].y = row * TILE_SIZE;
-                    board[row][col].targetX = col * TILE_SIZE;
-                    board[row][col].targetY = row * TILE_SIZE;
+                if (gameState.board[row][col]) {
+                    gameState.board[row][col].x = col * gameState.tileSize;
+                    gameState.board[row][col].y = row * gameState.tileSize;
+                    gameState.board[row][col].targetX = col * gameState.tileSize;
+                    gameState.board[row][col].targetY = row * gameState.tileSize;
                 }
             }
         }
@@ -53,8 +61,8 @@ function updateBoardPositions() {
 
 function updateScoreDisplay() {
     try {
-        document.getElementById('score-value').textContent = score;
-        document.getElementById('task-score-value').textContent = taskScore;
+        document.getElementById('score-value').textContent = gameState.score;
+        document.getElementById('task-score-value').textContent = gameState.taskScore;
     } catch (e) {
         console.error(`Failed to update score display: ${e.message}`);
     }
@@ -62,47 +70,52 @@ function updateScoreDisplay() {
 
 export function initGame() {
     console.log('Initializing game...');
-    if (isGameInitialized) {
+    if (gameState.isGameInitialized) {
         console.log('Game already initialized, skipping...');
         return;
     }
-    isGameInitialized = true;
+    gameState.isGameInitialized = true;
 
     try {
-        score = 0;
-        taskScore = 0;
-        currentTaskIndex = 0;
+        if (!gameState.canvas) {
+            throw new Error('Canvas element not found');
+        }
+        gameState.ctx = gameState.canvas.getContext('2d');
+        if (!gameState.ctx) {
+            throw new Error('Failed to get 2D context for canvas');
+        }
 
-        // Create shape canvases before loading task
-        createShapeCanvas('square', '#ff5555', shapeCanvases);
-        createShapeCanvas('circle', '#55ff55', shapeCanvases);
-        createShapeCanvas('triangle', '#5555ff', shapeCanvases);
+        gameState.score = 0;
+        gameState.taskScore = 0;
+        gameState.currentTaskIndex = 0;
 
-        // Load task after shapeCanvases is initialized
-        loadTask(task, collectedShapes, movesLeft, currentTaskIndex, PREDEFINED_TASKS, taskScore, updateTaskDisplay, updateScoreDisplay, initBoard, render);
-        initBoard(board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, TILE_SIZE, resolveInitialMatches, validateBoard);
+        createShapeCanvas('square', '#ff5555', gameState.shapeCanvases);
+        createShapeCanvas('circle', '#55ff55', gameState.shapeCanvases);
+        createShapeCanvas('triangle', '#5555ff', gameState.shapeCanvases);
+
+        loadTask(gameState.task, gameState.collectedShapes, gameState.movesLeft, gameState.currentTaskIndex, PREDEFINED_TASKS, gameState.taskScore, updateTaskDisplay, updateScoreDisplay, () => initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, gameState.tileSize, resolveInitialMatches, validateBoard), () => render(gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize));
+
+        initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, gameState.tileSize, resolveInitialMatches, validateBoard);
         adjustCanvasSize();
 
-        updateTaskDisplay(task, collectedShapes, movesLeft, shapeCanvases);
+        updateTaskDisplay(gameState.task, gameState.collectedShapes, gameState.movesLeft, gameState.shapeCanvases);
         updateScoreDisplay();
 
-        // Remove existing event listeners to prevent duplicates
-        canvas.removeEventListener('click', handleClick);
-        canvas.removeEventListener('dblclick', handleDoubleClick);
-        canvas.removeEventListener('touchstart', handleTouchStart);
-        canvas.removeEventListener('touchmove', handleTouchMove);
-        canvas.removeEventListener('touchend', handleTouchEnd);
+        gameState.canvas.removeEventListener('click', handleClick);
+        gameState.canvas.removeEventListener('dblclick', handleDoubleClick);
+        gameState.canvas.removeEventListener('touchstart', handleTouchStart);
+        gameState.canvas.removeEventListener('touchmove', handleTouchMove);
+        gameState.canvas.removeEventListener('touchend', handleTouchEnd);
 
-        // Add event listeners with canvas and TILE_SIZE
-        canvas.addEventListener('click', (e) => handleClick(e, board, selectedTile, isProcessing, movesLeft, handleBonusStarSwap, swapTiles, handleMatches, checkTaskCompletion, updateTaskDisplay, render, score, taskScore, updateScoreDisplay, canvas, TILE_SIZE));
-        canvas.addEventListener('dblclick', (e) => handleDoubleClick(e, board, isProcessing, handleBonusTileAction, checkTaskCompletion, render, canvas, TILE_SIZE));
-        canvas.addEventListener('touchstart', (e) => handleTouchStart(e, board, selectedTile, isProcessing, TILE_SIZE, render, canvas), { passive: false });
-        canvas.addEventListener('touchmove', (e) => handleTouchMove(e), { passive: false });
-        canvas.addEventListener('touchend', (e) => handleTouchEnd(e, board, selectedTile, isProcessing, movesLeft, handleBonusTileAction, handleBonusStarSwap, swapTiles, handleMatches, checkTaskCompletion, updateTaskDisplay, render, TILE_SIZE, canvas), { passive: false });
+        gameState.canvas.addEventListener('click', (e) => handleClick(e, gameState));
+        gameState.canvas.addEventListener('dblclick', (e) => handleDoubleClick(e, gameState));
+        gameState.canvas.addEventListener('touchstart', (e) => handleTouchStart(e, gameState), { passive: false });
+        gameState.canvas.addEventListener('touchmove', (e) => handleTouchMove(e), { passive: false });
+        gameState.canvas.addEventListener('touchend', (e) => handleTouchEnd(e, gameState), { passive: false });
 
         window.addEventListener('resize', adjustCanvasSize);
 
-        render(ctx, board, selectedTile, animations, shapeCanvases, TILE_SIZE);
+        render(gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize);
         console.log('Game initialized successfully');
     } catch (e) {
         console.error(`Failed to initialize game: ${e.message}`);
