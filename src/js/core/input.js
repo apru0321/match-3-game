@@ -1,4 +1,7 @@
 import { GRID_WIDTH, GRID_HEIGHT } from '../constants.js';
+import { render } from './render.js';
+import { swapTiles, handleBonusStarSwap, handleMatches, handleBonusTileAction, dropTiles, fillBoard, validateBoard, checkMatches } from './board.js';
+import { updateTaskDisplay, checkTaskCompletion, loadTask, showNotification } from './tasks.js';
 
 export function handleClick(e, gameState) {
     if (gameState.isProcessing) return;
@@ -21,13 +24,77 @@ export function handleClick(e, gameState) {
 
                 const isBonusStarSwap = gameState.board[gameState.selectedTile.row][gameState.selectedTile.col].bonusType === 'bonus_star' || gameState.board[row][col].bonusType === 'bonus_star';
                 if (isBonusStarSwap) {
-                    handleBonusStarSwap(gameState.board, gameState.selectedTile.row, gameState.selectedTile.col, row, col, GRID_HEIGHT, GRID_WIDTH, ['square', 'circle', 'triangle'], gameState.task, gameState.collectedShapes, gameState.score, gameState.taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkMatches, handleMatches, checkTaskCompletion);
+                    handleBonusStarSwap(
+                        gameState.board,
+                        gameState.selectedTile.row,
+                        gameState.selectedTile.col,
+                        row,
+                        col,
+                        GRID_HEIGHT,
+                        GRID_WIDTH,
+                        ['square', 'circle', 'triangle'],
+                        gameState.task,
+                        gameState.collectedShapes,
+                        gameState.score,
+                        gameState.taskScore,
+                        updateScoreDisplay,
+                        updateTaskDisplay,
+                        (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                        dropTiles,
+                        fillBoard,
+                        validateBoard,
+                        checkMatches,
+                        handleMatches,
+                        checkTaskCompletion
+                    );
                 } else {
-                    swapTiles(gameState.board, gameState.selectedTile.row, gameState.selectedTile.col, row, col, gameState.animations, render, validateBoard, gameState.tileSize);
-                    handleMatches(gameState.board, ['square', 'circle', 'triangle'], gameState.task, gameState.collectedShapes, gameState.score, gameState.taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkTaskCompletion);
+                    swapTiles(
+                        gameState.board,
+                        gameState.selectedTile.row,
+                        gameState.selectedTile.col,
+                        row,
+                        col,
+                        gameState.animations,
+                        (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                        validateBoard,
+                        gameState.tileSize
+                    );
+                    handleMatches(
+                        gameState.board,
+                        ['square', 'circle', 'triangle'],
+                        gameState.task,
+                        gameState.collectedShapes,
+                        gameState.score,
+                        gameState.taskScore,
+                        updateScoreDisplay,
+                        updateTaskDisplay,
+                        (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                        dropTiles,
+                        fillBoard,
+                        validateBoard,
+                        checkTaskCompletion
+                    );
                 }
 
-                checkTaskCompletion(gameState.task, gameState.collectedShapes, gameState.movesLeft, gameState.currentTaskIndex, gameState.taskScore, updateTaskDisplay, updateScoreDisplay, () => initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, gameState.tileSize, resolveInitialMatches, validateBoard), render, loadTask, showNotification, gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize);
+                checkTaskCompletion(
+                    gameState.task,
+                    gameState.collectedShapes,
+                    gameState.movesLeft,
+                    gameState.currentTaskIndex,
+                    gameState.taskScore,
+                    updateTaskDisplay,
+                    updateScoreDisplay,
+                    () => initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ['square', 'circle', 'triangle'], gameState.tileSize, resolveInitialMatches, validateBoard),
+                    (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                    loadTask,
+                    showNotification,
+                    gameState.ctx,
+                    gameState.board,
+                    gameState.selectedTile,
+                    gameState.animations,
+                    gameState.shapeCanvases,
+                    gameState.tileSize
+                );
                 updateTaskDisplay(gameState.task, gameState.collectedShapes, gameState.movesLeft, gameState.shapeCanvases);
                 gameState.selectedTile = null;
                 gameState.isProcessing = false;
@@ -56,8 +123,47 @@ export function handleDoubleClick(e, gameState) {
         const tile = gameState.board[row][col];
         if (tile && tile.bonusType && tile.bonusType !== 'bonus_star') {
             gameState.isProcessing = true;
-            handleBonusTileAction(gameState.board, row, col, tile.bonusType, GRID_HEIGHT, GRID_WIDTH, ['square', 'circle', 'triangle'], gameState.task, gameState.collectedShapes, gameState.score, gameState.taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkMatches, handleMatches, checkTaskCompletion);
-            checkTaskCompletion(gameState.task, gameState.collectedShapes, gameState.movesLeft, gameState.currentTaskIndex, gameState.taskScore, updateTaskDisplay, updateScoreDisplay, () => initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, gameState.tileSize, resolveInitialMatches, validateBoard), render, loadTask, showNotification, gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize);
+            handleBonusTileAction(
+                gameState.board,
+                row,
+                col,
+                tile.bonusType,
+                GRID_HEIGHT,
+                GRID_WIDTH,
+                ['square', 'circle', 'triangle'],
+                gameState.task,
+                gameState.collectedShapes,
+                gameState.score,
+                gameState.taskScore,
+                updateScoreDisplay,
+                updateTaskDisplay,
+                (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                dropTiles,
+                fillBoard,
+                validateBoard,
+                checkMatches,
+                handleMatches,
+                checkTaskCompletion
+            );
+            checkTaskCompletion(
+                gameState.task,
+                gameState.collectedShapes,
+                gameState.movesLeft,
+                gameState.currentTaskIndex,
+                gameState.taskScore,
+                updateTaskDisplay,
+                updateScoreDisplay,
+                () => initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ['square', 'circle', 'triangle'], gameState.tileSize, resolveInitialMatches, validateBoard),
+                (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                loadTask,
+                showNotification,
+                gameState.ctx,
+                gameState.board,
+                gameState.selectedTile,
+                gameState.animations,
+                gameState.shapeCanvases,
+                gameState.tileSize
+            );
             gameState.isProcessing = false;
             render(gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize);
         }
@@ -109,13 +215,77 @@ export function handleTouchEnd(e, gameState) {
 
             const isBonusStarSwap = gameState.board[gameState.selectedTile.row][gameState.selectedTile.col].bonusType === 'bonus_star' || gameState.board[row][col].bonusType === 'bonus_star';
             if (isBonusStarSwap) {
-                handleBonusStarSwap(gameState.board, gameState.selectedTile.row, gameState.selectedTile.col, row, col, GRID_HEIGHT, GRID_WIDTH, ['square', 'circle', 'triangle'], gameState.task, gameState.collectedShapes, gameState.score, gameState.taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkMatches, handleMatches, checkTaskCompletion);
+                handleBonusStarSwap(
+                    gameState.board,
+                    gameState.selectedTile.row,
+                    gameState.selectedTile.col,
+                    row,
+                    col,
+                    GRID_HEIGHT,
+                    GRID_WIDTH,
+                    ['square', 'circle', 'triangle'],
+                    gameState.task,
+                    gameState.collectedShapes,
+                    gameState.score,
+                    gameState.taskScore,
+                    updateScoreDisplay,
+                    updateTaskDisplay,
+                    (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                    dropTiles,
+                    fillBoard,
+                    validateBoard,
+                    checkMatches,
+                    handleMatches,
+                    checkTaskCompletion
+                );
             } else {
-                swapTiles(gameState.board, gameState.selectedTile.row, gameState.selectedTile.col, row, col, gameState.animations, render, validateBoard, gameState.tileSize);
-                handleMatches(gameState.board, ['square', 'circle', 'triangle'], gameState.task, gameState.collectedShapes, gameState.score, gameState.taskScore, updateScoreDisplay, updateTaskDisplay, render, dropTiles, fillBoard, validateBoard, checkTaskCompletion);
+                swapTiles(
+                    gameState.board,
+                    gameState.selectedTile.row,
+                    gameState.selectedTile.col,
+                    row,
+                    col,
+                    gameState.animations,
+                    (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                    validateBoard,
+                    gameState.tileSize
+                );
+                handleMatches(
+                    gameState.board,
+                    ['square', 'circle', 'triangle'],
+                    gameState.task,
+                    gameState.collectedShapes,
+                    gameState.score,
+                    gameState.taskScore,
+                    updateScoreDisplay,
+                    updateTaskDisplay,
+                    (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                    dropTiles,
+                    fillBoard,
+                    validateBoard,
+                    checkTaskCompletion
+                );
             }
 
-            checkTaskCompletion(gameState.task, gameState.collectedShapes, gameState.movesLeft, gameState.currentTaskIndex, gameState.taskScore, updateTaskDisplay, updateScoreDisplay, () => initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, gameState.tileSize, resolveInitialMatches, validateBoard), render, loadTask, showNotification, gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize);
+            checkTaskCompletion(
+                gameState.task,
+                gameState.collectedShapes,
+                gameState.movesLeft,
+                gameState.currentTaskIndex,
+                gameState.taskScore,
+                updateTaskDisplay,
+                updateScoreDisplay,
+                () => initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ['square', 'circle', 'triangle'], gameState.tileSize, resolveInitialMatches, validateBoard),
+                (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize),
+                loadTask,
+                showNotification,
+                gameState.ctx,
+                gameState.board,
+                gameState.selectedTile,
+                gameState.animations,
+                gameState.shapeCanvases,
+                gameState.tileSize
+            );
             updateTaskDisplay(gameState.task, gameState.collectedShapes, gameState.movesLeft, gameState.shapeCanvases);
             gameState.selectedTile = null;
             gameState.isProcessing = false;
@@ -131,4 +301,13 @@ export function isAdjacent(tile1, tile2) {
         (tile1.row === tile2.row && Math.abs(tile1.col - tile2.col) === 1) ||
         (tile1.col === tile2.col && Math.abs(tile1.row - tile2.row) === 1)
     );
+}
+
+function updateScoreDisplay() {
+    try {
+        document.getElementById('score-value').textContent = gameState.score;
+        document.getElementById('task-score-value').textContent = gameState.taskScore;
+    } catch (e) {
+        console.error(`Failed to update score display: ${e.message}`);
+    }
 }
