@@ -31,10 +31,10 @@ function adjustCanvasSize() {
         if (gameState.board.length === GRID_HEIGHT) {
             updateBoardPositions();
         }
-        if (gameState.ctx) {
+        if (gameState.ctx && gameState.board.length === GRID_HEIGHT) {
             render(gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize);
         } else {
-            console.error('Cannot render: ctx is undefined in adjustCanvasSize');
+            console.warn('Cannot render: ctx or board not fully initialized');
         }
     } catch (e) {
         console.error(`Error in adjustCanvasSize: ${e.message}`);
@@ -74,7 +74,6 @@ export function initGame() {
         console.log('Game already initialized, skipping...');
         return;
     }
-    gameState.isGameInitialized = true;
 
     try {
         if (!gameState.canvas) {
@@ -88,6 +87,7 @@ export function initGame() {
         gameState.score = 0;
         gameState.taskScore = 0;
         gameState.currentTaskIndex = 0;
+        gameState.isGameInitialized = true;
 
         createShapeCanvas('square', '#ff5555', gameState.shapeCanvases);
         createShapeCanvas('circle', '#55ff55', gameState.shapeCanvases);
@@ -126,10 +126,15 @@ export function initGame() {
 
         window.addEventListener('resize', adjustCanvasSize);
 
-        render(gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize);
-        console.log('Game initialized successfully');
+        if (gameState.board.length === GRID_HEIGHT) {
+            render(gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize);
+            console.log('Game initialized successfully');
+        } else {
+            throw new Error('Board initialization failed, cannot render');
+        }
     } catch (e) {
         console.error(`Failed to initialize game: ${e.message}`);
+        gameState.isGameInitialized = false; // Сбрасываем флаг, чтобы можно было попробовать снова
         throw e;
     }
 }
