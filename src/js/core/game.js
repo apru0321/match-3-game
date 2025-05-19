@@ -1,8 +1,8 @@
 import { GRID_WIDTH, GRID_HEIGHT, ALL_SHAPES, ALL_COLORS, PREDEFINED_TASKS } from '../constants.js';
 import { validateBoard, initBoard, resolveInitialMatches, checkMatches, handleMatches, dropTiles, fillBoard, handleBonusTileAction, handleBonusStarSwap, swapTiles } from './board.js';
-import { handleClick, handleDoubleClick, handleTouchStart, handleTouchMove, handleTouchEnd, isAdjacent } from './input.js';
+import { handleClick, handleDoubleClick, handleTouchStart, handleTouchMove, handleTouchEnd } from './input.js';
 import { render, updateAnimations, createShapeCanvas } from './render.js';
-import { loadTask, generateNewTask, updateTaskDisplay, checkTaskCompletion, showNotification } from './tasks.js';
+import { loadTask, updateTaskDisplay, checkTaskCompletion, showNotification } from './tasks.js';
 
 const gameState = {
     isGameInitialized: false,
@@ -93,7 +93,18 @@ export function initGame() {
         createShapeCanvas('circle', '#55ff55', gameState.shapeCanvases);
         createShapeCanvas('triangle', '#5555ff', gameState.shapeCanvases);
 
-        loadTask(gameState.task, gameState.collectedShapes, gameState.movesLeft, gameState.currentTaskIndex, PREDEFINED_TASKS, gameState.taskScore, updateTaskDisplay, updateScoreDisplay, () => initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, gameState.tileSize, resolveInitialMatches, validateBoard), () => render(gameState.ctx, gameState.board, gameState.selectedTile, gameState.animations, gameState.shapeCanvases, gameState.tileSize));
+        loadTask(
+            gameState.task,
+            gameState.collectedShapes,
+            gameState.movesLeft,
+            gameState.currentTaskIndex,
+            PREDEFINED_TASKS,
+            gameState.taskScore,
+            updateTaskDisplay,
+            updateScoreDisplay,
+            () => initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, gameState.tileSize, resolveInitialMatches, validateBoard),
+            (ctx, board, selectedTile, animations, shapeCanvases, tileSize) => render(ctx, board, selectedTile, animations, shapeCanvases, tileSize)
+        );
 
         initBoard(gameState.board, GRID_HEIGHT, GRID_WIDTH, ALL_SHAPES, gameState.tileSize, resolveInitialMatches, validateBoard);
         adjustCanvasSize();
