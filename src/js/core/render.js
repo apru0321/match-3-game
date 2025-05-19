@@ -1,5 +1,8 @@
 export function render(ctx, board, selectedTile, animations, shapeCanvases, tileSize) {
     try {
+        if (!ctx) {
+            throw new Error('ctx is undefined');
+        }
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         for (let row = 0; row < board.length; row++) {
             for (let col = 0; col < board[0].length; col++) {
@@ -59,6 +62,9 @@ export function createShapeCanvas(shape, color, shapeCanvases) {
         canvas.width = 50;
         canvas.height = 50;
         const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error(`Failed to create 2D context for shape canvas: ${shape}`);
+        }
         ctx.fillStyle = color;
         if (shape === 'square') {
             ctx.fillRect(5, 5, 40, 40);
