@@ -1,6 +1,8 @@
 import { ALL_SHAPES } from '../constants.js';
+import { initBoard } from './board.js';
+import { render } from './render.js';
 
-export function loadTask(task, collectedShapes, movesLeft, currentTaskIndex, PREDEFINED_TASKS, taskScore, updateTaskDisplay, updateScoreDisplay, initBoard, render) {
+export function loadTask(task, collectedShapes, movesLeft, currentTaskIndex, PREDEFINED_TASKS, taskScore, updateTaskDisplay, updateScoreDisplay, initBoardCallback, renderCallback) {
     try {
         if (currentTaskIndex < PREDEFINED_TASKS.length) {
             task.shape = PREDEFINED_TASKS[currentTaskIndex].shape;
@@ -48,22 +50,22 @@ export function updateTaskDisplay(task, collectedShapes, movesLeft, shapeCanvase
     }
 }
 
-export function checkTaskCompletion(task, collectedShapes, movesLeft, currentTaskIndex, taskScore, updateTaskDisplay, updateScoreDisplay, initBoard, render, loadTask, showNotification, ctx, board, selectedTile, animations, shapeCanvases, tileSize) {
+export function checkTaskCompletion(task, collectedShapes, movesLeft, currentTaskIndex, taskScore, updateTaskDisplay, updateScoreDisplay, initBoardCallback, renderCallback, loadTaskCallback, showNotification, ctx, board, selectedTile, animations, shapeCanvases, tileSize) {
     try {
         if (collectedShapes[task.shape] >= task.count) {
             taskScore += 100;
             currentTaskIndex++;
             showNotification('Task Completed!');
-            loadTask(task, collectedShapes, movesLeft, currentTaskIndex);
+            loadTaskCallback(task, collectedShapes, movesLeft, currentTaskIndex);
             updateScoreDisplay();
-            initBoard();
-            render(ctx, board, selectedTile, animations, shapeCanvases, tileSize);
+            initBoardCallback();
+            renderCallback(ctx, board, selectedTile, animations, shapeCanvases, tileSize);
         } else if (movesLeft <= 0) {
             showNotification('Task Failed! Restarting...');
-            loadTask(task, collectedShapes, movesLeft, currentTaskIndex);
+            loadTaskCallback(task, collectedShapes, movesLeft, currentTaskIndex);
             updateScoreDisplay();
-            initBoard();
-            render(ctx, board, selectedTile, animations, shapeCanvases, tileSize);
+            initBoardCallback();
+            renderCallback(ctx, board, selectedTile, animations, shapeCanvases, tileSize);
         }
     } catch (e) {
         console.error(`Failed to check task completion: ${e.message}`);
